@@ -16,6 +16,23 @@ var VideoService = (function () {
         this.currentTitle = "loading...";
         this.currentTime = 0;
         this.totalTime = 0;
+        this.isMuted = false;
+        this.isPlaying = false;
+        this.isDragging = false;
+        this.dragStart = function (e) {
+            this.isDragging = true;
+        };
+        this.dragMove = function (e) {
+            if (this.isDragging) {
+                this.calculatedWidth = e.x;
+            }
+        };
+        this.dragStop = function (e) {
+            if (this.isDragging) {
+                this.isDragging = false;
+                this.seekVideo(e);
+            }
+        };
         this.updateData = function (e) {
             _this.totalTime = _this.videoElement.duration;
         };
@@ -23,10 +40,13 @@ var VideoService = (function () {
             _this.currentTime = _this.videoElement.currentTime;
         };
         this.timerFired = function () {
-            _this.calculatedScrubY = _this.videoElement.offsetHeight;
-            var t = _this.videoElement.currentTime;
-            var d = _this.videoElement.duration;
-            _this.calculatedWidth = (t / d * _this.videoElement.offsetWidth);
+            if (!_this.isDragging) {
+                _this.calculatedScrubY = _this.videoElement.offsetHeight;
+                var t = _this.videoElement.currentTime;
+                var d = _this.videoElement.duration;
+                _this.calculatedWidth = (t / d * _this.videoElement.offsetWidth);
+            }
+            ;
         };
     }
     VideoService.prototype.appSetup = function (v) {
@@ -37,6 +57,49 @@ var VideoService = (function () {
         this.currentTitle = "Cow";
         window.setInterval(this.timerFired, 500);
     };
+    VideoService.prototype.seekVideo = function (e) {
+        var w = document.getElementById('progressMeterFull').offsetWidth;
+        var d = this.videoElement.duration;
+        var s = Math.round(e.pageX / w * d);
+        this.videoElement.currentTime = s;
+    };
+    VideoService.prototype.muteVideo = function () {
+        if (this.videoElement.volume == 0) {
+            this.videoElement.volume = 1;
+            this.isMuted = false;
+        }
+        else {
+            this.videoElement.volume = 0;
+            this.isMuted = true;
+        }
+    };
+    ;
+    VideoService.prototype.playVideo = function () {
+        if (this.videoElement.paused) {
+            this.videoElement.play();
+            this.isPlaying = true;
+        }
+        else {
+            this.videoElement.pause();
+            this.isPlaying = false;
+        }
+    };
+    ;
+    VideoService.prototype.fullScreen = function () {
+        if (this.videoElement.requestFullscreen) {
+            this.videoElement.requestFullscreen();
+        }
+        else if (this.videoElement.mozRequestFullScreen) {
+            this.videoElement.mozRequestFullScreen();
+        }
+        else if (this.videoElement.webkitRequestFullscreen) {
+            this.videoElement.webkitRequestFullscreen();
+        }
+        else if (this.videoElement.msRequestFullscreen) {
+            this.videoElement.msRequestFullscreen();
+        }
+    };
+    ;
     VideoService = __decorate([
         core_1.Injectable(), 
         __metadata('design:paramtypes', [])

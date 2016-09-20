@@ -11,6 +11,8 @@ export class VideoService {
   public calculatedWidth:number;
   public calculatedScrubY:number;
   public isMuted:boolean = false;
+  public isPlaying:boolean = false;
+  public isDragging:boolean = false;
 
   constructor() {}
 
@@ -24,6 +26,30 @@ export class VideoService {
 
   }
   
+  seekVideo(e:any) {
+    var w = document.getElementById('progressMeterFull').offsetWidth;
+    var d = this.videoElement.duration;
+    var s = Math.round(e.pageX / w * d);
+    this.videoElement.currentTime = s;
+  }
+
+  dragStart = function(e:any) {
+    this.isDragging = true;
+  };
+
+  dragMove = function(e:any) {
+    if(this.isDragging) {
+      this.calculatedWidth = e.x;
+    }
+  };
+
+  dragStop = function(e:any) {
+    if(this.isDragging) {
+      this.isDragging = false;
+      this.seekVideo(e);
+    }
+  };
+
   muteVideo() {
     if(this.videoElement.volume == 0) {
         this.videoElement.volume = 1;
@@ -33,19 +59,44 @@ export class VideoService {
         this.isMuted = true;
     }
   };
+  
+  playVideo() {
+	  if(this.videoElement.paused) {
+		  this.videoElement.play();
+		  this.isPlaying = true;
+	  }else{
+		  this.videoElement.pause();
+		  this.isPlaying = false;
+	  }
+  };
+  
+  fullScreen() {
+    if(this.videoElement.requestFullscreen) {
+      this.videoElement.requestFullscreen();
+    }else if(this.videoElement.mozRequestFullScreen) {
+      this.videoElement.mozRequestFullScreen();
+    }else if(this.videoElement.webkitRequestFullscreen) {
+      this.videoElement.webkitRequestFullscreen();
+    }else if(this.videoElement.msRequestFullscreen) {
+      this.videoElement.msRequestFullscreen();
+    }
+  };
 
   updateData = (e:any) => {
     this.totalTime = this.videoElement.duration;
-  } ;
+  };
   updateTime = (e:any) => {
       this.currentTime = this.videoElement.currentTime;
   };
   
   timerFired = () => {
-    this.calculatedScrubY = this.videoElement.offsetHeight;
-    var t = this.videoElement.currentTime;
-    var d = this.videoElement.duration;
-    this.calculatedWidth = (t / d * this.videoElement.offsetWidth);
+    if(!this.isDragging) {
+      this.calculatedScrubY = this.videoElement.offsetHeight;
+      var t = this.videoElement.currentTime;
+      var d = this.videoElement.duration;
+      this.calculatedWidth = (t / d * this.videoElement.offsetWidth);
+    };
+    
   };
 }
  
