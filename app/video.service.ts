@@ -1,4 +1,6 @@
 import {Injectable} from '@angular/core';
+import {Http, Response} from '@angular/http';
+import 'rxjs/add/operator/map';
 
 @Injectable()
 export class VideoService {
@@ -13,19 +15,38 @@ export class VideoService {
   public isMuted:boolean = false;
   public isPlaying:boolean = false;
   public isDragging:boolean = false;
+  public showDetails:boolean = false;
+  public currentDesc:String = "A very nice video...";
+  public playlist:Array<Object> = [];
 
-  constructor() {}
+  constructor(private http:Http) {}
 
   appSetup(v:string) {
     this.videoElement = <HTMLVideoElement> document.getElementById(v);
     this.videoElement.addEventListener("loadedmetadata", this.updateData);
     this.videoElement.addEventListener("timeupdate", this.updateTime);
-    this.currentPath = "./video/cow.mp4";
-    this.currentTitle = "Cow";
     window.setInterval(this.timerFired, 500);
-
   }
   
+  gatherJSON = () => {
+    this.http.get('./data/playlist.json')
+      .map((res:Response) => res.json())
+      .subscribe(
+          data => {
+            this.playlist = data;
+            this.selectedVideo(0);
+          }
+      );
+  };
+
+  selectedVideo = (i:number) => {
+    this.currentTitle = this.playlist[i]['title'];
+    this.currentDesc = this.playlist[i]['description'];
+    this.videoElement.src = this.playlist[i]['path'];
+    this.videoElement.pause();
+    this.isPlaying = false;
+  };
+
   seekVideo(e:any) {
     var w = document.getElementById('progressMeterFull').offsetWidth;
     var d = this.videoElement.duration;
@@ -79,6 +100,14 @@ export class VideoService {
       this.videoElement.webkitRequestFullscreen();
     }else if(this.videoElement.msRequestFullscreen) {
       this.videoElement.msRequestFullscreen();
+    }
+  };
+
+  details() {
+    if(this.showDetails == false) {
+      this.showDetails = true;
+    }else{
+      this.showDetails = false;
     }
   };
 

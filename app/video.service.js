@@ -9,9 +9,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 var core_1 = require('@angular/core');
+var http_1 = require('@angular/http');
+require('rxjs/add/operator/map');
 var VideoService = (function () {
-    function VideoService() {
+    function VideoService(http) {
         var _this = this;
+        this.http = http;
         this.currentPath = "";
         this.currentTitle = "loading...";
         this.currentTime = 0;
@@ -19,6 +22,24 @@ var VideoService = (function () {
         this.isMuted = false;
         this.isPlaying = false;
         this.isDragging = false;
+        this.showDetails = false;
+        this.currentDesc = "A very nice video...";
+        this.playlist = [];
+        this.gatherJSON = function () {
+            _this.http.get('./data/playlist.json')
+                .map(function (res) { return res.json(); })
+                .subscribe(function (data) {
+                _this.playlist = data;
+                _this.selectedVideo(0);
+            });
+        };
+        this.selectedVideo = function (i) {
+            _this.currentTitle = _this.playlist[i]['title'];
+            _this.currentDesc = _this.playlist[i]['description'];
+            _this.videoElement.src = _this.playlist[i]['path'];
+            _this.videoElement.pause();
+            _this.isPlaying = false;
+        };
         this.dragStart = function (e) {
             this.isDragging = true;
         };
@@ -53,8 +74,6 @@ var VideoService = (function () {
         this.videoElement = document.getElementById(v);
         this.videoElement.addEventListener("loadedmetadata", this.updateData);
         this.videoElement.addEventListener("timeupdate", this.updateTime);
-        this.currentPath = "./video/cow.mp4";
-        this.currentTitle = "Cow";
         window.setInterval(this.timerFired, 500);
     };
     VideoService.prototype.seekVideo = function (e) {
@@ -100,9 +119,18 @@ var VideoService = (function () {
         }
     };
     ;
+    VideoService.prototype.details = function () {
+        if (this.showDetails == false) {
+            this.showDetails = true;
+        }
+        else {
+            this.showDetails = false;
+        }
+    };
+    ;
     VideoService = __decorate([
         core_1.Injectable(), 
-        __metadata('design:paramtypes', [])
+        __metadata('design:paramtypes', [http_1.Http])
     ], VideoService);
     return VideoService;
 }());
